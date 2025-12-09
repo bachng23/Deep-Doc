@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepDoc | Restore Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette - Ethereal Cyberpunk */
+            --bg-void: #050510;
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --bg-glass-hover: rgba(255, 255, 255, 0.06);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            
+            --neon-cyan: #00F3FF;
+            --neon-purple: #7000FF;
+            --neon-red: #FF2E2E;
+            
+            --text-main: #FFFFFF;
+            --text-muted: #9CA3AF;
+            
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-hand: 'Permanent Marker', cursive;
+        }
+
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-void); }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(var(--neon-purple), var(--neon-cyan)); 
+            border-radius: 10px; 
+        }
+
+        /* Dynamic Background (Aurora) */
+        .ambient-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: floatOrb 20s infinite alternate ease-in-out;
+        }
+        .orb-1 { width: 60vw; height: 60vw; background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%); top: -200px; left: -200px; animation-duration: 25s; }
+        .orb-2 { width: 50vw; height: 50vw; background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%); bottom: -100px; right: -100px; animation-duration: 30s; animation-delay: -5s; }
+        .orb-3 { width: 30vw; height: 30vw; background: radial-gradient(circle, #2563EB 0%, transparent 70%); top: 40%; left: 30%; opacity: 0.3; animation-duration: 40s; animation-delay: -10s; }
+        
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, 80px) scale(1.1); }
+            66% { transform: translate(-30px, 40px) scale(0.9); }
+            100% { transform: translate(20px, -50px) scale(1); }
+        }
+
+        .grid-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: -1;
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* Components */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .glass-card::before {
+            content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1) 50%, transparent);
+            transform: skewX(-25deg); transition: left 0.6s ease; z-index: 2; pointer-events: none;
+        }
+        .glass-card:hover::before { left: 150%; }
+        .glass-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0, 243, 255, 0.1); border-color: rgba(255,255,255,0.2); }
+
+        .btn {
+            padding: 1rem 2.5rem; border-radius: 100px; font-family: var(--font-display); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden; border: none; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-neon { background: transparent; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1); }
+        .btn-neon:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 30px var(--neon-cyan); }
+        .btn-glass { background: rgba(255,255,255,0.1); color: #fff; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .btn-glass:hover { background: rgba(255,255,255,0.2); border-color: #fff; }
+
+        /* Nav */
+        header { position: fixed; top: 20px; left: 0; width: 100%; z-index: 100; padding: 0 2rem; display: flex; justify-content: center; }
+        .nav-island { background: rgba(5, 5, 16, 0.6); backdrop-filter: blur(20px); border: 1px solid var(--border-glass); padding: 0.8rem 2rem; border-radius: 100px; display: flex; align-items: center; gap: 3rem; }
+        .logo { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: 1px; color: #fff; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { font-size: 0.9rem; color: var(--text-muted); transition: color 0.3s; }
+        .nav-links a:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
+
+        /* Hero */
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; position: relative; padding-top: 60px; }
+        
+        .pill-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 50px;
+            background: rgba(112, 0, 255, 0.2); border: 1px solid var(--neon-purple); color: #D8B4FE;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(112, 0, 255, 0.2); animation: fadeInDown 1s ease-out;
+        }
+        
+        .hero h1 {
+            font-family: var(--font-display); font-size: 5rem; line-height: 1; letter-spacing: -3px; margin-bottom: 1.5rem;
+            color: transparent; background-image: linear-gradient(135deg, #fff 20%, var(--neon-cyan) 60%, var(--neon-purple) 90%);
+            -webkit-background-clip: text; background-clip: text; background-size: 200% auto;
+            animation: textShine  5s linear infinite, fadeInUp 1s ease-out 0.2s backwards;
+        }
+        
+        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 3rem; animation: fadeInUp 1s ease-out 0.4s backwards; }
+        .hero-actions { display: flex; gap: 1.5rem; justify-content: center; animation: fadeInUp 1s ease-out 0.6s backwards; }
+
+        @keyframes textShine { to { background-position: 200% center; } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Logo & Brand Layout */
+        .brand-intro {
+            margin-bottom: 3rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .brand-title {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 12vw, 10rem);
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            text-transform: capitalize; /* "Deep Doc" vs "DEEP DOC"? Image has Title Case? No, user said "Deep Doc". Let's stick to standard lettering or uppercase? Image usually sans serif. Let's use Title Case for "Deep Doc" if requested or Keep Uppercase? User said "logo deep doc" lowercase in prompt but image usually has specific casing. Let's try Title Case per prompt "Deep Doc" */
+            /* Actually user prompt: 'Deep Doc'. Image text usually matches. */
+            color: #fff;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1));
+        }
+
+        .ai-circle {
+            width: clamp(3rem, 8vw, 6rem);
+            height: clamp(3rem, 8vw, 6rem);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', serif; /* or serif */
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            color: #fff;
+            font-weight: 300;
+            animation: slowRotate 20s infinite linear;
+        }
+
+        .brand-slogan-lockup {
+            font-family: var(--font-body);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-top: -0.5rem;
+        }
+
+        @keyframes slowRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Mission / Tech Bar */
+        .mission-section { padding: 4rem 0 8rem; }
+        .mission-glass {
+            padding: 4rem; text-align: center; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;
+            /* Wider span for narrative */
+        }
+        .mission-text { text-align: left; }
+        .mission-title { font-family: var(--font-display); font-size: 2rem; margin-bottom: 1rem; color: #fff; }
+        .mission-p { color: var(--text-muted); margin-bottom: 1.5rem; }
+        
+        /* Pixel Vision Highlight */
+        .tech-highlight { border-left: 2px solid var(--neon-cyan); padding-left: 1.5rem; }
+        .tech-highlight h4 { color: var(--neon-cyan); margin-bottom: 0.5rem; font-family: var(--font-display); }
+
+        /* Bento Grid */
+        .features { padding: 0 0 8rem; }
+        .bento-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, minmax(300px, auto)); gap: 24px;
+        }
+        .card-large { grid-column: span 2; }
+        .card-tall { grid-row: span 2; }
+        .bento-content { padding: 2.5rem; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 0 0 20px currentColor; }
+        .bento-title { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.5rem; color: #fff; }
+        .bento-desc { font-size: 1rem; color: var(--text-muted); }
+
+        .card-video .card-icon { color: var(--neon-cyan); }
+        .card-risk { border-color: rgba(255, 46, 46, 0.2); background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255, 46, 46, 0.05) 100%); }
+        .card-risk .card-icon { color: var(--neon-red); }
+        .card-enterprise { border-color: rgba(112, 0, 255, 0.2); }
+        .card-enterprise .card-icon { color: var(--neon-purple); }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--border-glass); padding: 4rem 0; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); }
+
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 3rem; }
+            .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+            .card-large, .card-tall { grid-column: span 1; grid-row: span 1; }
+            .nav-links { display: none; }
+            .mission-glass { grid-template-columns: 1fr; gap: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-canvas">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <header>
+        <div class="nav-island">
+            <div class="logo">DeepDoc</div>
+            <div class="nav-links">
+                <a href="#">Mission</a>
+                <a href="#">Technology</a>
+                <a href="#">Enterprise</a>
+            </div>
+            <a href="https://forms.gle/5qKxzqxjD4wFbvFh8" target="_blank" class="btn btn-neon" style="padding: 0.5rem 1.5rem; font-size: 0.8rem; border-width: 1px;">Join Waitlist</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <!-- Brand Intro (Reference Style) -->
+            <div class="brand-intro">
+                <div class="brand-lockup">
+                    <h1 class="brand-title">Deep Doc</h1>
+                </div>
+                <div class="brand-slogan-lockup">- Read Deeper With Us -</div>
+            </div>
+
+            <!-- Modified Main Headline to distinguish it -->
+            <h2 style="font-family: var(--font-display); font-size: 2.5rem; color: #fff; margin-bottom: 1rem;">Restore Intelligence</h2>
+            <p>We are not creating a tool for you to read more. We are creating a tool for you to <strong>understand</strong> deeper, faster, and easier.</p>
+            <div class="hero-actions">
+                <a href="https://forms.gle/5qKxzqxjD4wFbvFh8" target="_blank" class="btn btn-neon">Join The Waitlist</a>
+                <button class="btn btn-glass">View Teaser</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Mission / Tech Comparison -->
+        <section class="mission-section">
+            <div class="glass-card mission-glass">
+                <div class="mission-text">
+                    <h3 class="mission-title">From Problems to Ideas</h3>
+                    <p class="mission-p">Born from the cognitive needs of the neuro-divergent mind. We strip away the noise of static PDFs to reveal the vibrant, interconnected architecture of knowledge hidden underneath.</p>
+                </div>
+                <div class="mission-text tech-highlight">
+                    <h4>The Difference: Pixel-Based Vision</h4>
+                    <p class="mission-p" style="margin-bottom: 0;">Traditional AI is blind—it only sees strings of text. DeepDoc **sees pixels**. Like the human eye, it recognizes visual hierarchy, handwritten nuances, and complex data relationships without breaking context.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bento Box Features -->
+        <section class="features" style="padding-bottom: 4rem;">
+            <div class="bento-grid">
+                <!-- Video Card -->
+                <div class="glass-card card-large card-video">
+                    <div class="bento-content">
+                        <div>
+                            <div class="card-icon">🎥</div>
+                            <h3 class="bento-title">AI-Powered Instructional Video</h3>
+                        </div>
+                        <p class="bento-desc"><strong>Prompt:</strong> "Tell me about Transformers."<br><strong>Result:</strong> A detailed instructional video with narration and visuals extracted directly from the source material.</p>
+                    </div>
+                </div>
+
+                <!-- Risk Engine Card -->
+                <div class="glass-card card-tall card-risk">
+                    <div class="bento-content">
+                        <div>
+                            <div class="card-icon">🛡️</div>
+                            <h3 class="bento-title">Risk & Validation Engine (R.V.E.)</h3>
+                            <div style="margin-top: 20px; font-family: monospace; font-size: 0.8rem; color: var(--neon-red); line-height: 1.8;">
+                                > SCANNING PROPOSAL...<br>
+                                > FINDING BLIND SPOTS...<br>
+                                > INTERNAL CONTRADICTION FOUND<br>
+                                > GENERATING FAILURE SCENARIO
+                            </div>
+                        </div>
+                        <p class="bento-desc">Proactively finds weaknesses and missing data in reports, proposals, and research papers.</p>
+                    </div>
+                </div>
+
+                <!-- Enterprise Card -->
+                <div class="glass-card card-enterprise">
+                    <div class="bento-content">
+                        <div>
+                            <div class="card-icon">🏢</div>
+                            <h3 class="bento-title">Enterprise</h3>
+                        </div>
+                        <p class="bento-desc" style="font-size: 0.9rem;">
+                            <span style="display:block; margin-bottom:8px;">🔒 <strong>Zero Data Retention</strong></span>
+                            <span style="display:block;">📄 <strong>Unlimited Context</strong> (Thousands of pages)</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Handwriting Card (Replaces Podcast) -->
+                <div class="glass-card">
+                    <div class="bento-content">
+                        <div>
+                            <div class="card-icon">✍️</div>
+                            <h3 class="bento-title">Handwriting to Text</h3>
+                        </div>
+                        <p class="bento-desc">Instantly convert images of handwritten notes into digital text files. Deciphers any handwriting style with crystal-clear accuracy.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Coming Soon Footer -->
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.8rem; color: var(--text-muted);">Arrival: 2026</p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Copyright © 2025 DeepDoc AI. Read Deeper.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
